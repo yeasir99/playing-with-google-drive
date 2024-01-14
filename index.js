@@ -60,3 +60,20 @@ app.get('/save-text', async (req, res) => {
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Listening on port ${port}`));
+
+// applay search console execute fn for retrive data from search console
+
+const searchConsole = google.searchconsole('v1');
+
+async function execute() {
+  try {
+    const response = await searchConsole.sites.get({
+      auth,
+      siteUrl: 'https://www.bayshorecommunication.com/',
+    });
+
+    console.log('Response', response.data);
+  } catch (error) {
+    console.error('Error executing request', error.message);
+  }
+}
