@@ -22,7 +22,8 @@ try {
 app.get('/auth/google', (req, res) => {
   const scopes = [
     'https://www.googleapis.com/auth/userinfo.profile',
-    'https://www.googleapis.com/auth/drive',
+    'https://www.googleapis.com/auth/webmasters',
+    'https://www.googleapis.com/auth/webmasters.readonly',
   ];
   const url = oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -39,41 +40,28 @@ app.get('/auth/google/callback', async (req, res) => {
   res.send('Authenticated');
 });
 
-app.get('/save-text', async (req, res) => {
-  const drive = google.drive({ version: 'v3', auth: oauth2Client });
-  const textData =
-    "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.";
-
-  await drive.files.create({
-    requestBody: {
-      name: 'Test',
-      mimeType: 'text/plain',
-    },
-    media: {
-      mimeType: 'text/plain',
-      body: textData,
-    },
+app.get('/get-data', async (req, res) => {
+  const searchConsole = google.searchconsole({
+    version: 'v1',
+    auth: oauth2Client,
   });
+  try {
+    const response = await searchConsole.searchanalytics.query({
+      siteUrl: 'https://thecatflix.com',
+      startDate: '2023-12-12',
+      endDate: '2024-01-10',
+      dimensions: ['date'],
+      rowLimit: 10,
+      startRow: 0,
+    });
 
-  res.status(200).send('File saved');
+    console.log('Response', response.data);
+    res.status(200).send('get data');
+  } catch (error) {
+    console.error('Error executing request', error.message);
+    res.status(400).send('failed');
+  }
 });
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Listening on port ${port}`));
-
-// applay search console execute fn for retrive data from search console
-
-const searchConsole = google.searchconsole('v1');
-
-async function execute() {
-  try {
-    const response = await searchConsole.sites.get({
-      auth,
-      siteUrl: 'https://www.bayshorecommunication.com/',
-    });
-
-    console.log('Response', response.data);
-  } catch (error) {
-    console.error('Error executing request', error.message);
-  }
-}
